@@ -2,9 +2,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const admin = require('firebase-admin');
+const MongoClient = require('mongodb').MongoClient;
+require('dotenv').config()
+// console.log(process.env.DB_PASS);
+
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.wbtxn.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
+const port = 5000
 
 const app = express()
-const port = 5000
 
 app.use(cors())
 app.use(bodyParser.json())
@@ -17,12 +22,9 @@ admin.initializeApp({
 });
 
 
-
-const MongoClient = require('mongodb').MongoClient;
-const uri = "mongodb+srv://<username>:<password>@cluster0.wbtxn.mongodb.net/<dbname>?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
-  const bookings = client.db("dbname").collection("bookings");
+  const bookings = client.db(process.env.DB_NAME).collection("bookings");
 
   app.post('/addBooking', (req, res) => {
     const newBooking = req.body;
@@ -36,7 +38,7 @@ client.connect(err => {
     const bearer = req.headers.authorization;
     if (bearer && bearer.startsWith('Bearer ')) {
       const idToken = bearer.split(' ')[1]
-      console.log({ idToken });
+      // console.log({ idToken });
       admin
         .auth()
         .verifyIdToken(idToken)
@@ -44,7 +46,7 @@ client.connect(err => {
           // const uid = decodedToken.uid;
           const tokenEmail = decodedToken.email;
           const queryEmail = req.query.email;
-          console.log(tokenEmail, queryEmail);
+          // console.log(tokenEmail, queryEmail);
           if (tokenEmail === queryEmail) {
             bookings.find({ email: queryEmail })
             .toArray((err, documents) => {
@@ -66,10 +68,5 @@ client.connect(err => {
 
   })
 });
-
-
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
 
 app.listen(port)
