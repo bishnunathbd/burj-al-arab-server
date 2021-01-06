@@ -22,7 +22,7 @@ const MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://<username>:<password>@cluster0.wbtxn.mongodb.net/<dbname>?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
-  const bookings = client.db("<dbname>").collection("bookings");
+  const bookings = client.db("dbname").collection("bookings");
 
   app.post('/addBooking', (req, res) => {
     const newBooking = req.body;
@@ -48,13 +48,19 @@ client.connect(err => {
           if (tokenEmail === queryEmail) {
             bookings.find({ email: queryEmail })
             .toArray((err, documents) => {
-              res.send(documents);
+              res.status(200).send(documents);
             })
+          }
+          else{
+            res.status(401).send('Un-authorized access...')
           }
         })
         .catch((error) => {
-          // Handle error
+          res.status(401).send('Un-authorized access...')
         });
+    } 
+    else {
+      res.status(401).send('Un-authorized access...')
     }
 
 
